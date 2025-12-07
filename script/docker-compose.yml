@@ -81,7 +81,7 @@ services:
       MAX_CONCURRENT: ${MAX_CONCURRENT:-1000}
       MAX_DEPTH: ${MAX_DEPTH:-3}
       TIMEOUT: ${TIMEOUT:-30}
-      WORKER_ID: worker-${HOSTNAME}
+      WORKER_ID: worker-1
       POLL_INTERVAL: 5
     command: ["python", "worker.py"]
     depends_on:
