@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # Unbound DNS Resolver
+  unbound:
+    image: mvance/unbound:latest
+    container_name: email_extractor_dns
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    volumes:
+      - ../engine/unbound/unbound.conf:/opt/unbound/etc/unbound/unbound.conf:ro
+      - unbound-data:/opt/unbound/etc/unbound/data
+    networks:
+      - extractor_network
+    restart: unless-stopped
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: email_extractor_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: email_extraction
+      MYSQL_USER: email_extractor
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../definition/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - extractor_network
+    restart: unless-stopped
+    command: >
+      --max_connections=1000
+      --innodb_buffer_pool_size=2G
+      --innodb_log_file_size=512M
+      --max_allowed_packet=256M
+
+  # Email Extraction API
+  api:
+    build:
+      context: ..
+      dockerfile: script/Dockerfile
+    container_name: email_extractor_api
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: email_extractor
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: email_extraction
+      DNS_RESOLVER: unbound
+      MAX_CONCURRENT: ${MAX_CONCURRENT:-1000}
+      MAX_DEPTH: ${MAX_DEPTH:-3}
+      TIMEOUT: ${TIMEOUT:-30}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - unbound
+    volumes:
+      - ../logs:/app/logs
+    networks:
+      - extractor_network
+    restart: unless-stopped
+
+  # Worker nodes
+  # Note: To run multiple workers, use: docker-compose up --scale worker=3
+  worker:
+    build:
+      context: ..
+      dockerfile: script/Dockerfile
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: email_extractor
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: email_extraction
+      DNS_RESOLVER: unbound
+      MAX_CONCURRENT: ${MAX_CONCURRENT:-1000}
+      MAX_DEPTH: ${MAX_DEPTH:-3}
+      TIMEOUT: ${TIMEOUT:-30}
+      WORKER_ID: worker-${HOSTNAME}
+      POLL_INTERVAL: 5
+    command: ["python", "worker.py"]
+    depends_on:
+      - mysql
+      - unbound
+    volumes:
+      - ../logs:/app/logs
+    networks:
+      - extractor_network
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  unbound-data:
+
+networks:
+  extractor_network:
+    driver: bridge

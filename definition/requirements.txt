@@ -1,0 +1,24 @@
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Async HTTP and networking
+aiohttp==3.9.1
+aiodns==3.1.1
+
+# Database
+aiomysql==0.2.0
+PyMySQL==1.1.0
+
+# HTML parsing
+beautifulsoup4==4.12.3
+lxml==5.1.0
+
+# Email validation
+email-validator==2.1.0.post1
+dnspython==2.5.0
+
+# Utilities
+python-dotenv==1.0.0
