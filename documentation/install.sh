@@ -93,32 +93,22 @@ mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 
 # Detect GitHub username from script source
-SCRIPT_URL="${BASH_SOURCE[0]}"
-if [[ $SCRIPT_URL =~ github.com/([^/]+) ]]; then
-    DETECTED_USERNAME="${BASH_REMATCH[1]}"
-    GITHUB_USERNAME="$DETECTED_USERNAME"
-else
-    # Fallback: ask user
-    echo ""
-    echo -e "${YELLOW}Enter your GitHub username:${NC}"
-    read GITHUB_USERNAME
-fi
+GITHUB_USERNAME="emailengineer"
+
 
 # Clone repository
 echo ""
 echo "Downloading application from GitHub..."
-echo "Repository: https://github.com/$GITHUB_USERNAME/email-extractor"
+echo "Repository: https://github.com/emailengineer/email-extractor"
 
-if git clone "https://github.com/$GITHUB_USERNAME/email-extractor.git" . > /dev/null 2>&1; then
+if git clone "https://github.com/emailengineer/email-extractor.git" . > /dev/null 2>&1; then
     echo -e "${GREEN}✓${NC} Application downloaded"
 else
     echo -e "${RED}ERROR: Failed to clone repository${NC}"
-    echo "Please check:"
-    echo "  1. Repository exists: https://github.com/$GITHUB_USERNAME/email-extractor"
-    echo "  2. Repository is public or you have access"
-    echo "  3. GitHub is accessible from this server"
+    echo "Please check if GitHub is accessible from this server"
     exit 1
 fi
+
 
 # Generate random secure passwords
 echo ""
