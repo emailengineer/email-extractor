@@ -78,4 +78,3 @@ Issues: https://github.com/emailengineer/email-extractor/issues
 ## License
 
 Proprietary - Internal Use Only
-
